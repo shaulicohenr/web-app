@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+data:
+  APP_ENV: "production"
+  SITE_TITLE: "Shauli Games Website"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: web-secrets
+type: Opaque
+stringData:
+  API_KEY: "my-secret-api-key-123"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: web-container
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: web-config
+        - secretRef:
+            name: web-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
